@@ -22,6 +22,8 @@ KNOWN_QUANTIZATION_TYPES = {
     "q3_k_l",
     "q4_k_s",
     "q4_k_m",
+    "q4_0_4_4",
+    "q4_0_4_8",
     "q5_k_s",
     "q5_k_m",
     "q6_k",
@@ -62,7 +64,7 @@ def quantize(
     if not os.path.isfile(q_model_path):
         if not nonq_model_path:
             raise ValueError(f"Could not find nonquantized model at {nonq_model_path}")
-        quantize_cmd = os.path.join(get_llama_cpp_dir(), "quantize")
+        quantize_cmd = os.path.join(get_llama_cpp_dir(), "llama-quantize")
 
         if not os.path.isfile(quantize_cmd):
             raise RuntimeError(
