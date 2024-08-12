@@ -9,7 +9,7 @@ import huggingface_hub
 import tqdm
 from huggingface_hub.hf_api import RepoFile
 
-hf_token = os.environ.get("HF_TOKEN", None)
+hf_token = os.environ.get("HF_TOKEN")
 
 KNOWN_QUANTIZATION_TYPES = {
     "q4_0",
@@ -215,7 +215,7 @@ def convert_using_hf_to_gguf(dirname, *, convert_type):
     Returns:
         None
     """
-    convert_hf_to_gguf_py = os.path.join(get_llama_cpp_dir(), "convert-hf-to-gguf.py")
+    convert_hf_to_gguf_py = os.path.join(get_llama_cpp_dir(), "convert_hf_to_gguf.py")
     if not os.path.isfile(convert_hf_to_gguf_py):
         raise RuntimeError(
             f"Could not find convert.py at {convert_hf_to_gguf_py} "
