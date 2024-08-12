@@ -9,7 +9,7 @@ import huggingface_hub
 import tqdm
 from huggingface_hub.hf_api import RepoFile
 
-hf_token = huggingface_hub.get_token()
+hf_token = os.environ.get("HF_TOKEN", None)
 
 KNOWN_QUANTIZATION_TYPES = {
     "q4_0",
