@@ -32,6 +32,15 @@ KNOWN_QUANTIZATION_TYPES = {
 
 
 def get_llama_cpp_dir():
+    """
+    Retrieves the directory path for the llama.cpp directory.
+
+    Returns:
+        str: The directory path for the llama.cpp directory.
+
+    Raises:
+        ValueError: If the llama.cpp directory is not found at the specified path.
+    """
     dir = os.environ.get("LLAMA_CPP_DIR", "./")
     if not os.path.isdir(dir):
         raise ValueError(f"Could not find llama.cpp directory at {dir}")
@@ -43,6 +52,19 @@ GG_MODEL_EXTENSION = ".gguf"
 
 
 def print_and_check_call(args: list):
+    """
+    Prints the command being executed and then calls `subprocess.check_call` with the given arguments.
+
+    Args:
+        args (list): The list of command-line arguments to be executed.
+
+    Returns:
+        int: The return code of the executed command.
+
+    Raises:
+        CalledProcessError: If the command returns a non-zero exit status.
+
+    """
     print("=> Running:", shlex.join(args))
     return subprocess.check_call(args)
 
@@ -53,6 +75,18 @@ def quantize(
     src_type: str,
     dest_type: str,
 ) -> str:
+    """
+    Quantizes a model from source type to destination type.
+    Args:
+        dirname (str): The directory path.
+        src_type (str): The source type of the model.
+        dest_type (str): The destination type of the model.
+    Returns:
+        str: The path of the quantized model.
+    Raises:
+        ValueError: If the nonquantized model is not found at the specified path.
+        RuntimeError: If the quantize executable is not found at the specified path.
+    """
     q_model_path = os.path.join(
         dirname,
         f"ggml-model-{dest_type}{GG_MODEL_EXTENSION}",
@@ -77,6 +111,19 @@ def quantize(
 
 
 def get_ggml_model_path(dirname: str, convert_type: str):
+    """
+    Returns the path of the GGML model file based on the given directory name and convert type.
+
+    Args:
+        dirname (str): The directory name where the model file is located.
+        convert_type (str): The type of conversion to be performed.
+
+    Returns:
+        str: The path of the GGML model file.
+
+    Raises:
+        ValueError: If the convert_type is unknown.
+    """
     if convert_type in ("0", "f32"):
         type_moniker = "f32"
     elif convert_type in ("1", "f16"):
@@ -94,6 +141,18 @@ def convert_pth(
     vocab_type: str,
     use_convert_hf_to_gguf=False,
 ):
+    """
+    Convert a model file to the specified format.
+
+    Args:
+        dirname (str): The directory path where the model file is located.
+        convert_type (str): The type of conversion to perform.
+        vocab_type (str): The type of vocabulary to use.
+        use_convert_hf_to_gguf (bool, optional): Whether to use the convert_hf_to_gguf function for conversion. Defaults to False.
+
+    Returns:
+        str: The path of the converted model file.
+    """
     model_path = get_ggml_model_path(dirname, convert_type)
     try:
         stat = os.stat(model_path)
@@ -111,6 +170,20 @@ def convert_pth(
 
 
 def convert_using_convert(dirname, *, convert_type, vocab_type):
+    """
+    Convert the files in the specified directory using the convert.py script.
+
+    Args:
+        dirname (str): The directory path containing the files to be converted.
+        convert_type (str): The type of conversion to be performed.
+        vocab_type (str): The type of vocabulary to be used.
+
+    Raises:
+        RuntimeError: If the convert.py script is not found at the specified location.
+
+    Returns:
+        None
+    """
     convert_hf_to_gguf_py = os.path.join(get_llama_cpp_dir(), "convert.py")
     if not os.path.isfile(convert_hf_to_gguf_py):
         raise RuntimeError(
@@ -129,6 +202,19 @@ def convert_using_convert(dirname, *, convert_type, vocab_type):
 
 
 def convert_using_hf_to_gguf(dirname, *, convert_type):
+    """
+    Converts a directory using the 'convert-hf-to-gguf.py' script.
+
+    Args:
+        dirname (str): The directory path to convert.
+        convert_type (str): The type of conversion to perform.
+
+    Raises:
+        RuntimeError: If the 'convert-hf-to-gguf.py' script is not found.
+
+    Returns:
+        None
+    """
     convert_hf_to_gguf_py = os.path.join(get_llama_cpp_dir(), "convert-hf-to-gguf.py")
     if not os.path.isfile(convert_hf_to_gguf_py):
         raise RuntimeError(
@@ -155,6 +241,24 @@ def convert_pth_to_types(
     vocab_type: str,
     use_convert_hf_to_gguf=False,
 ):
+    """
+    Convert PyTorch models to different types.
+
+    Args:
+        dirname (str): The directory path where the models are located.
+        types (list): A list of target types to convert the models to.
+        remove_nonquantized_model (bool, optional): Whether to remove the non-quantized model. Defaults to False.
+        nonquantized_type (str): The type of the non-quantized model.
+        vocab_type (str): The type of the vocabulary.
+        use_convert_hf_to_gguf (bool, optional): Whether to use the convert_hf_to_gguf function. Defaults to False.
+
+    Yields:
+        str: The path of the converted model.
+
+    Raises:
+        ValueError: If an unknown type is encountered.
+
+    """
     # If f32 is requested, or a quantized type is requested, convert to fp32 GGML
     nonquantized_path = None
     if nonquantized_type in types or any(t.startswith("q") for t in types):
@@ -188,6 +292,14 @@ def convert_pth_to_types(
 
 
 def download_repo(repo, dirname):
+    """
+    Download files from a Hugging Face repository.
+    Args:
+        repo (str): The name or ID of the Hugging Face repository.
+        dirname (str): The directory where the files will be downloaded.
+    Returns:
+        None
+    """
     files = list(huggingface_hub.list_repo_tree(repo, token=hf_token))
     if not any(fi.rfilename.startswith("pytorch_model") for fi in files):
         print(
